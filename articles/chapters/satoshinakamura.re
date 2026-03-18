@@ -3,13 +3,17 @@
 
 //lead{
 シンプルなウェブアプリケーションと豊富な図を用いて、Chainlitの機能を解説します。
+本章の主な対象読者は、Chainlitを使い始めた開発者です。
+チャットアプリケーションの開発に向けて、Chainlitの基本的な機能を把握したい方向けの内容となっています。
 //}
+
+//pagebreak
 
 == 本章で利用するアプリケーション
 
 本章では、ルールベースで応答するシンプルなウェブアプリケーション @<fn>{support} を例に、Chainlitの機能を説明します。アプリケーションの構成は @<img>{app_overview} の通りです。ユーザーはブラウザからアクセスしてチャットを行います。チャットの内容は PostgreSQL データベースに保存されます。
 
-//footnote[support][本章のソースコードは以下から参照できます。@<href>{https://github.com/kimajin/chainlit-playground}]
+//footnote[support][本章のソースコードは以下の @<code>{ch03-basics} ディレクトリから参照できます。@<href>{https://github.com/statditto/chainlit-techbook-support}]
 
 //image[app_overview][アプリケーション構成図][scale=0.6]{
 //}
