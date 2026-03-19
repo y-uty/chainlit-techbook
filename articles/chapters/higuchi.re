@@ -1,6 +1,17 @@
 
 = ChainlitのUIを@<ruby>{癖, へき}に染める
 
+//lead{
+Chainlitは簡単にLLMとの会話アプリを作れるよう、シンプルで使いやすいUIが標準装備されています。
+加えて、カスタムCSSやカスタムJavaScriptも反映できるため、凝ったデザインの適用も可能です。
+この章では、これらの機能を使ってSF風のUIの実装を行います。
+
+フロントエンドの経験が少ない方でも取り組める内容です。
+普段使いのチャットUIを思い通りにカスタマイズしてみましょう。
+//}
+
+//pagebreak
+
 == はじめに
 生成AIが一般社会に急速に浸透し、我々の生活やワークスタイルは大きく変化しました。日々の献立から専門的な分野の調査分析まで、普段使う言葉で相談できる生成AIは、もはや日常になくてはならないものになっています。それはまるで、先人たちがSF作品で描いた世界のようです。
 
@@ -32,16 +43,13 @@ UI変更の実装のために、ベースとなる簡単なアプリケーショ
 
 この記事ではUIのカラー変更やアニメーション適用を扱いますが、書籍版はモノクロ印刷です。
 これらの内容の補足のために、Appendixサイト@<fn>{appendix-site}に参考資料を掲載しました。
-合わせて、装飾前後のコードもGitHubで公開しています@<fn>{base-repo} @<fn>{finished-repo}。
+合わせて、装飾後のコードもGitHubで公開しています@<fn>{finished-repo}。
 必要に応じてご参照ください。
 
 //footnote[appendix-site][Appendixサイト: @<href>{https://seahawk-tiger.github.io/chainlit-ui-appendix/}]
-//footnote[finished-repo][変更後コード: @<href>{https://github.com/seahawk-tiger/chainlit-ui-playground/tree/main}]
-//footnote[base-repo][変更前コード: @<href>{https://github.com/seahawk-tiger/chainlit-ui-playground/tree/base}]
+//footnote[finished-repo][変更後コードは以下のURLの @<code>{ch10-cyber-ui} ディレクトリを参照 @<href>{https://github.com/seahawk-tiger/chainlit-ui-playground/tree/main}]
 
 //image[seahawk-qr-01][サンプルコード・AppendixサイトのQRコード][scale=0.6]
-
-//pagebreak
 
 
 == ChainlitのUI変更の仕様を知る
@@ -50,7 +58,7 @@ ChainlitはLLMとの会話アプリを簡単に実装することを主眼に作
 
 ただし、簡単なデザイン変更はサポートされています。具体的には、@<code>{config.toml}に装飾用のファイル（CSS, JS, ロゴなど）のパスを書き込むことで、標準UIのスタイルを上書きできます。
 
-整理すると、@<b>{HTMLは直接の編集が難しく、CSSとJSは適用が容易}という構図です。そのため、この記事では@<b>{標準UIをCSSで静的・動的に装飾しつつ、必要であればJSでHTMLの要素を編集する}という作戦で実装することにしました。
+整理すると、@<b>{HTMLは直接の編集が難しく、CSSとJSは適用が容易}という状況です。そのため、この記事では@<b>{標準UIをCSSで静的・動的に装飾しつつ、必要であればJSでHTMLの要素を編集する}という作戦で実装することにしました。
 
 =={design} 実装するデザインとアニメーション
 
@@ -93,6 +101,9 @@ public/ <- 作成
 その後、@<code>{config.toml}を開き、配置したロゴファイルのパスを入力すれば完了です。
 faviconにも@<code>{logo_file_url}で指定されたファイルが使われます。
 ついでに、AIの返答メッセージの横に表示されるアイコンも同じロゴファイルにしておきましょう。
+
+//pagebreak
+
 //emlist[.chainlit/config.toml][toml]{
 # Load assistant logo directly from URL.
 logo_file_url = "/public/logo.svg"
@@ -130,7 +141,7 @@ custom_meta_image_url = "(略)/logo/chainlit_banner.png"
 
 
 ここまでで、ロゴと表記を変更できました。今の見た目はこのようになっています。左側のタイトルと右半分の背景に注目してください。
-//image[seahawk-login-compare-ml][ロゴの適用前後比較][scale=0.9]
+//image[seahawk-login-compare-ml][ロゴの適用前後比較][scale=1]
 
 
 === 静的要素を変更する
@@ -140,7 +151,7 @@ custom_meta_image_url = "(略)/logo/chainlit_banner.png"
 
 ここからは、CSSを編集して静的要素を変更していきます。
 
-ロゴと同様に、装飾に使うスタイルシートを@<code>{public}配下に配置します。もう一つ大事な要素として、@<code>{theme.json}というファイルも作っておきましょう。この@<code>{theme.json}は、ChainlitのUIで使用されるカラーパレットやデザイントークンを定義するためのファイルです。これを利用することで、アプリケーション全体の配色やUIテーマを統一できます。
+ロゴと同様に、装飾に使うスタイルシートを@<code>{public}配下に配置します。もう一つ大事な要素として、@<code>{theme.json}というファイルも作っておきましょう。@<code>{theme.json}は、ChainlitのUIで使用されるカラーパレットやデザイントークンを定義するためのファイルで、アプリケーション全体の配色やUIテーマを統一できます。
 
 //emlist[ディレクトリ構造]{
 その他のディレクトリは省略
@@ -155,7 +166,7 @@ public/
 └── stylesheet.css <- 新規作成
 //}
 
-これらのファイルが作成できたら、@<code>{config.toml}を編集します。これもロゴの登録と同じ要領です。
+ファイルの作成後、@<code>{config.toml}を編集します。これもロゴの登録と同じ要領です。
 注意点として、@<code>{custom_css} や @<code>{custom_js} は @<code>{.chainlit/config.toml}にコメント付きの設定例が記載されていますが、@<code>{custom_theme}の設定はテンプレートに含まれていない場合があります。その場合は、手動で@<code>{config.toml}に@<code>{custom_theme}の設定を記載してください。
 
 また、JSファイルの登録も同じ要領です。後で使うのでここで一緒に作っておきましょう。
@@ -209,7 +220,7 @@ body:has(input[type="password"]):has(button[type="submit"])
 }
 //}
 
-続いて、フォームを中央に配置する処理です。まず、フォームを含む@<code>{root}を全面に広げ中央配置します。その後、フォームを持つ要素を中央寄せします。
+続いて、フォームを中央に配置する処理です。まず、rootとmainを画面幅いっぱいに広げます。その後、フォームを含むmainを中央寄せし、さらにその直下の子要素も中央寄せします。
 //emlist[public/stylesheet.css][css]{
 body:has(input[type="password"]):has(button[type="submit"]) #root,
 body:has(input[type="password"]):has(button[type="submit"]) main{
@@ -236,7 +247,7 @@ body:has(input[type="password"]):has(button[type="submit"])
 //}
 
 ===== ロゴを入力欄の上部に表示する @<br>{}
-ロゴを画面の中心かつ入力欄の上に配置するため、@<code>{logo.svg}を使った要素を探して、中央寄せします。
+ロゴを画面の中心かつ入力欄の上に配置するため、@<code>{logo.svg}を参照している要素を探して、中央寄せします。
 
 //emlist[public/stylesheet.css][css]{
 body:has(input[type="password"]):has(button[type="submit"])
@@ -249,7 +260,7 @@ body:has(input[type="password"]):has(button[type="submit"])
 //}
 
 ===== その他の要素の変更 @<br>{}
-あとはフォームの要素や見出し、ボタンを装飾します。下記は入力ボックスの例です。ログイン画面全体の@<code>{input}を指定しており、同じ要領で@<code>{button}も装飾しています。他の装飾の解説は割愛します。
+残りのフォームの要素や見出し、ボタンを装飾します。下記は入力ボックスの例です。ログイン画面全体の@<code>{input}を指定しており、同じ要領で@<code>{button}も装飾しています。他の装飾の解説は割愛します。
 
 //emlist[public/stylesheet.css][css]{
 body:has(input[type="password"]):has(button[type="submit"]) input {
@@ -263,8 +274,9 @@ body:has(input[type="password"]):has(button[type="submit"]) input {
 
 CSS適用により、ログイン画面はこのような見た目になりました。デザイン案に近づいてきましたね。
 
-//image[seahawk-customized-login-2-ml][装飾後のログイン画面][scale=0.45]
+//image[seahawk-customized-login-2-ml][装飾後のログイン画面][scale=0.6]
 
+//pagebreak
 
 ==== トーク画面の変更
 
@@ -418,7 +430,7 @@ body:not(
 
 
 ===== ロゴを複数枚のSVGファイルの重ね合わせに置き換える @<br>{}
-Chainlitの標準機能では、ロゴは1枚のみ登録可能です。(詳細は @<hd>{change-logo} @<fn>{logo-desc} をご覧ください) 今回は複数のSVGファイルを重ね合わせる必要があるので、JSで標準のロゴ要素を上書きします。このとき、各レイヤーに@<code>{cl-logo-layer-連番}というクラスを付与しておきます。これはのちのCSSのセレクタとして利用します。
+Chainlitの標準機能では、ロゴは1枚のみ登録可能です(詳細は @<hd>{change-logo} @<fn>{logo-desc} をご覧ください) 。今回は複数のSVGファイルを重ね合わせる必要があるので、JSで標準のロゴ要素を上書きします。このとき、各レイヤーに@<code>{cl-logo-layer-連番}というクラスを付与しておきます。これはのちのCSSのセレクタとして利用します。
 
 //emlist[public/effects.js][javascript]{
 /* 重ね合わせロゴのコンテナを作る */
@@ -477,9 +489,6 @@ UIデザインは、プロダクトの利便性の根幹の一つであると同
 == 参考資料
  * Chainlit公式ドキュメント - Customize
  ** https://docs.chainlit.io/customisation/overview
- ** https://docs.chainlit.io/customisation/theme
- ** https://docs.chainlit.io/customisation/custom-css
- ** https://docs.chainlit.io/customisation/custom-js
  * Shadcn Documentation - Theming
  ** https://ui.shadcn.com/docs/theming#list-of-variables
  
