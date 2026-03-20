@@ -2,56 +2,52 @@
 
 //lead{
 Chainlitのチャット画面の中にお絵かきキャンバスを埋め込み、AIと絵しりとりで遊べるWebアプリを作ります。
-標準のMessage/Actionだけではできない、CustomElementという仕組みを主役にした実装を紹介します。
+標準のMessage/Actionだけではできない、CustomElementという仕組みを主役にした実装を紹介します。標準的なチャットUIを超えた、リッチな機能を実装したい人におすすめの章です。
 //}
 
 //pagebreak
 
-本章のソースコード全体はサポートページ@<fn>{support}で公開しています。本文中のコードは要点を抜粋したものです。
-//footnote[support][https://github.com/xxx/e-shiritori （※実際のURLに差し替えてください）]
-
 == この章で作るもの
 
-この章では、ユーザーがキャンバスに絵を描き、AIが「しりとり」のルールで次の絵を返す――そんな「絵しりとり」Webアプリを、Chainlit + Gemini APIで作ります。
+この章では、ユーザーがキャンバスに絵を描き、AIが「しりとり」のルールで次の絵を返す、いわゆる「絵しりとり」Webアプリを、Chainlitを使って作ります。
 
-//image[sample-diagram][完成イメージ：チャット内にキャンバスが表示され、描いた絵をAIが判定して次の絵を返す]{
+//image[ditto-cat][完成イメージ：チャット内にキャンバスが表示され、好きな絵を描いて送信できる]{
 //}
 
-ゲームの流れは@<img>{sample-diagram}のとおりです。ユーザーが絵を描き、AIが判定して次の絵を返す――これをNラウンド繰り返します。
+絵の描画には、ブラウザのCanvas APIを使用し、AIの応答にはGemini APIを利用します。
+このアプリを通じて、ChainlitのCustomElement機能の活用法をお見せしたいと思います。
 
-//image[sample-diagram][ゲームフロー]{
-//}
+本章のソースコード全体はサポートページ@<fn>{support}で公開しています。本文中のコードは要点を抜粋したものですので、詳細はそちらを参照してください。
+//footnote[support][https://github.com/statditto/chainlit-techbook-support/ch08-e-shiritori]
 
-=== たった3ファイルで動く
+=== ファイル構成
 
-ファイル構成を見てみましょう。驚くほどシンプルです。
+ファイル構成を見てみましょう。非常にシンプルです。
 
 //table[files][ファイル構成]{
-ファイル    役割
+ファイル	役割
 -----------------
-app.py  Chainlit UIレイヤー（約150行）
-gemini.py   Gemini APIレイヤー（約120行）
-public/elements/DrawCanvas.jsx  お絵かきキャンバス（約155行）
+app.py	Chainlit UIレイヤー
+gemini.py	Gemini APIレイヤー
+public/elements/DrawCanvas.jsx	お絵かきキャンバス
 //}
 
-あとは設定ファイル（@<code>{.chainlit/config.toml}、@<code>{.env}）とCSS/JSが少々。
-3ファイル合計400行台で、AIと絵しりとりができるアプリが完成します（@<img>{sample-diagram}）。
+設定ファイル（@<code>{.chainlit/config.toml}、@<code>{.env}）にも少し手を加えますが、実装の中心はこの3ファイルです。
+たったこれだけで、絵しりとりアプリが完成します。本章では、Chainlitでちょっと手の込んだUIを作成するための機能、CustomElementに焦点を当て、Chainlitの基本機能（@<code>{on_chat_start}、@<code>{cl.Message}など）の説明は他章に譲ります。
 
-//image[sample-diagram][アーキテクチャ：3ファイルの役割とデータの流れ]{
-//}
 
-Chainlitの基本（@<code>{on_chat_start}、@<code>{cl.Message}など）は本書の他章に譲ります。本章では、Chainlitの「裏技」的な機能であるCustomElementに焦点を当てます。
-
-== CustomElementの基本
+== CustomElement
 
 === なぜCustomElementが必要か
 
 Chainlitには@<code>{cl.Message}でテキストや画像を送る機能、@<code>{cl.Action}でボタンを配置する機能があります。
 しかし「キャンバスに自由にお絵かき」のようなリッチなインタラクションは、標準の仕組みだけでは実現できません。
 そこで登場するのがCustomElementです。
-JSXコンポーネントを書いて@<code>{public/elements/}に置くだけで、チャットのメッセージ内に独自のUIを埋め込めます。
+JSX@<fn>{JSX}コンポーネントを書いて@<code>{public/elements/}に置くだけで、チャットのメッセージ内に独自のUIを埋め込めます。
 
-=== 仕組み：3つのポイント
+//footnote[JSX][JSXはJavaScript XMLの略で、JavaScript内でHTMLのような構文を使える拡張構文です。Reactなどのフレームワークで広く使われています。]
+
+=== 3つのポイント
 
 CustomElementで押さえるべきポイントは3つだけです。
 
@@ -63,7 +59,7 @@ CustomElementで押さえるべきポイントは3つだけです。
 //emlist[バックエンド側（app.py）]{
 canvas = cl.CustomElement(
     name="DrawCanvas",  # public/elements/DrawCanvas.jsx に対応
-    props={"hint": "好きな絵を描いてね！", "round": 1, "maxRounds": 5},
+    props={"hint": hint, "round": round_num, "maxRounds": MAX_ROUNDS},
 )
 await cl.Message(content="描いてね！", elements=[canvas]).send()
 //}
@@ -73,8 +69,7 @@ await cl.Message(content="描いてね！", elements=[canvas]).send()
 バックエンドで指定した@<code>{props}は、JSX内でグローバル変数@<code>{props}として参照できます。
 関数の引数ではなくグローバルに注入される点が通常のReactコンポーネントとの違いです。
 
-//emlist[フロントエンド側（DrawCanvas.jsx）]{
-// propsはグローバルに注入される（引数ではない！）
+//emlist[フロントエンド側（DrawCanvas.jsx）][javascript]{
 const hint = props.hint || "絵を描いてね！";
 const round = props.round || 1;
 const maxRounds = props.maxRounds || 5;
@@ -95,33 +90,26 @@ callAction({
 @cl.action_callback("submit_drawing")
 async def on_submit(action: cl.Action):
     img_data = action.payload.get("image", "")
-    # Base64デコードして処理...
+    # 画像データを処理して次の絵を生成
 //}
 
 @<code>{callAction}の@<code>{name}と@<code>{@cl.action_callback}のname引数が対応します。
-payloadには任意のJSONシリアライズ可能なデータを載せられるため、今回はBase64エンコードした画像データを送っています。
 
 === 使えるライブラリ
 
-CustomElementのJSX内では、以下のライブラリがimport可能です。
+CustomElementのJSX内では、次のライブラリなどをインポートして利用できます。
+
  * React（@<code>{useState}、@<code>{useEffect}、@<code>{useRef}など）
  * shadcn/ui（@<code>{@/components/ui/button}など）
  * lucide-react（アイコン）
 
-逆にいえば、任意のnpmパッケージは使えません。
-しかしCanvas APIはブラウザ標準なので、お絵かき機能はこの制約内で十分実装可能です。
+逆にいえば、任意の外部パッケージを利用できるわけではありません。
+ただし、Canvas APIなどのブラウザ標準APIは制限なく利用できるため、描画機能などはこれらを用いて実装可能です。
 
 == お絵かきキャンバスを実装する
 
 いよいよ本章の主役、@<code>{DrawCanvas.jsx}の実装に入ります。
-コード全体（約155行）はサポートページを参照してください。ここでは実装のポイントを5つに絞って解説します。
-@<code>{DrawCanvas.jsx}の構造を大まかにまとめると次のとおりです。
-
- * state管理 ― @<code>{isDrawing}（描画中か）、@<code>{penColor}、@<code>{penSize}、@<code>{submitted}（送信済みか）
- * props受信 ― バックエンドから@<code>{hint}、@<code>{round}、@<code>{maxRounds}を受け取る
- * 描画ロジック ― Canvas APIで@<code>{beginPath}→@<code>{lineTo}→@<code>{stroke}
- * 送信 ― @<code>{callAction}でBase64画像をバックエンドに送る
- * JSX ― canvas要素＋色/太さ入力＋クリア/送信ボタン
+コード全体はサポートページを参照してください。ここでは実装のポイントを3つに絞って解説します。
 
 === ポイント① Canvas APIでの描画
 
@@ -131,7 +119,7 @@ CustomElementのJSX内では、以下のライブラリがimport可能です。
 const startDraw = (e) => {
   const ctx = canvas.getContext("2d");
   const pos = getPos(e, canvas);
-  ctx.beginPath();        // 新しいパスを開始
+  ctx.beginPath();           // 新しいパスを開始
   ctx.moveTo(pos.x, pos.y);  // 始点を設定
   setIsDrawing(true);
 };
@@ -139,36 +127,15 @@ const draw = (e) => {
   if (!isDrawing) return;
   const pos = getPos(e, canvas);
   ctx.lineTo(pos.x, pos.y);  // 始点から現在位置まで線を引く
-  ctx.stroke();               // 実際に描画
+  ctx.stroke();              // 実際に描画
 };
 //}
 
 @<code>{lineCap = "round"}を設定することで、線の端が丸くなり、手書き風の滑らかな線になります。
 
-=== ポイント② 座標補正とタッチ対応
+=== ポイント② callActionで画像を送信する
 
-CSSで@<code>{width: 100%}とレスポンシブにしているため、canvasの表示サイズと内部解像度（400×400）にズレが生じます。
-
-@<code>{getBoundingClientRect()}で表示サイズを取得し、比率で補正します。
-//emlist[座標補正（マウス・タッチ兼用）]{
-const getPos = (e, canvas) => {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  const src = e.touches ? e.touches[0] : e;
-  return {
-    x: (src.clientX - rect.left) * scaleX,
-    y: (src.clientY - rect.top) * scaleY,
-  };
-};
-//}
-
-タッチイベント（@<code>{onTouchStart}等）もマウスイベントと同じハンドラで処理しています。
-canvasタグにTailwindの@<code>{touch-none}クラスを付けることで、描画中のページスクロールを防止しています。
-
-=== ポイント③ callActionで画像を送信する
-
-「送る」ボタンが押されたら、canvasの内容をBase64エンコードしてバックエンドに送ります。
+「送る」ボタンが押されたら、canvasの内容をバックエンドに送ります。
 
 //emlist[画像の送信]{
 const submit = () => {
@@ -183,11 +150,9 @@ const submit = () => {
 };
 //}
 
-@<code>{canvas.toDataURL("image/png")}で@<code>{data:image/png;base64,...}形式の文字列が得られます。
-これをそのまま@<code>{callAction}のpayloadに含めてバックエンドに送信します。
 送信後は@<code>{setSubmitted(true)}でボタンとキャンバスを無効化し、二重送信を防止しています。
 
-=== ポイント④ propsで毎ラウンドの情報を受け取る
+=== ポイント③ propsで毎ラウンドの情報を受け取る
 
 ラウンドが進むたびに、バックエンドは新しいCustomElementを生成して送ります。
 フロントエンドでは@<code>{props}の変化を@<code>{useEffect}で検知して、キャンバスを白紙にリセットしています。
@@ -200,7 +165,7 @@ useEffect(() => {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   setSubmitted(false);
-}, [props.hint]);  // hintが変わったら（=新ラウンド）リセット
+}, [props.hint]);  // hintが変わったらリセット
 //}
 
 == バックエンドでゲームを動かす
@@ -209,50 +174,43 @@ useEffect(() => {
 
 === ゲームフローの全体像
 
-@<code>{action_callback}に集約されたゲームフローは、次のステップで構成されます。
-//emlist[app.py：action_callbackの骨格（抜粋）]{
-@cl.action_callback("submit_drawing")
-async def on_submit(action: cl.Action):
-    await action.remove()           # 「使用済み」表示を防止
-    img_bytes = decode(action.payload)  # Base64デコード
-    # AIが絵を判定 → しりとりの次の単語を選ぶ
-    async with cl.Step(name="🤔 考え中...") as step:
-        thinking, user_word = await identify_drawing(...)
-        step.output = thinking
-    # AIの絵を生成して表示 → 次のキャンバスを送る
+ユーザーが「送る」ボタンを押した後のバックエンド処理は、大きく3つのステップで構成されます。
+
+//emlist[app.py：action_callback の要約]{
+# 画像データを用意
+img_data = action.payload.get("image", "").split(",")[1]
+img_bytes = base64.b64decode(img_data)
+
+# 1. AIがユーザーの絵を判定（Step 1）
+async with cl.Step(name="判定中...") as step:
+    thinking, user_word = await identify_drawing(img_bytes, last_char)
+    step.output = thinking
+
+# 2. AIが次の絵を生成（Step 2）
+async with cl.Step(name="次を考え中...") as step:
+    _, ai_word = await pick_next_word(user_word[-1])
     ai_img_bytes = await generate_image(ai_word)
-    await cl.Message(
-        content="続きを描いてね！",
-        elements=[_canvas(hint, round_num + 1)],
-    ).send()
+
+# 3. 結果表示と次のターンの準備
+await cl.Message(content="AIの絵", elements=[...]).send()
+await cl.Message(content="続きをどうぞ！", elements=[...]).send()
 //}
 
-①の@<code>{await action.remove()}は地味ですが重要です。
-@<code>{callAction}でアクションを実行すると、Chainlitはデフォルトで「使用済み」というフィードバックをUIに表示します。
-コールバック先頭で@<code>{action.remove()}を呼ぶことで、この表示を抑制できます。
-なお@<code>{cl.Step}の完了時にも同じ「使用済み」が表示されます。
-これは@<code>{.chainlit/translations/ja.json}を編集し、@<code>{chat.messages.status.used}の値を「完了！」などに変更するとよいでしょう。
-また、@<code>{_canvas}ヘルパーで毎ラウンド新しいCustomElementを生成しているのもポイントです。
-
-//emlist[app.py：キャンバス生成ヘルパー]{
-def _canvas(hint, round_num):
-    return cl.CustomElement(
-        name="DrawCanvas",
-        props={"hint": hint, "round": round_num,
-               "maxRounds": MAX_ROUNDS},
-    )
-//}
+これは人間が絵しりとりを行うときの思考過程と同じ構造になっています。
 
 === cl.Stepで「AIの思考」を折りたたみ表示
 
-@<code>{cl.Step}はコンテキストマネージャとして使うことで、チャット内に折りたたみ可能なセクションを作れます。
+@<code>{cl.Step}を使うことで、チャット内に折りたたみ可能なセクションを作れます。
 //emlist[cl.Stepの基本パターン]{
 async with cl.Step(name="🤔 AIが絵を見て考え中...") as step:
     thinking, user_word = await identify_drawing(img_bytes, last_char)
     step.output = thinking  # 折りたたみの中に表示される内容
 //}
 
-cl.Stepを活用すると、AIの思考過程（「えっとね、まるいかたちで…これはりんごかな！」）を見せながら、チャット画面をすっきり保てます。
+cl.Stepを活用すると、AIの思考過程を見せながら、チャット画面をすっきり保てます。
+
+//image[ditto-thinking][AIの思考過程]{
+//}
 
 === Gemini APIの構造化出力で応答を安定させる
 
@@ -264,9 +222,9 @@ _SHIRITORI_SCHEMA = {
     "type": "object",
     "properties": {
         "thinking": {"type": "string",
-            "description": "幼稚園児風の短い思考過程"},
+            "description": "5歳の幼稚園児風の短い思考過程（2〜3行）"},
         "answer":   {"type": "string",
-            "description": "ひらがなの単語"},
+            "description": "ひらがなの単語（「ん」で終わらないこと）"},
     },
     "required": ["thinking", "answer"],
 }
@@ -277,43 +235,20 @@ resp = client.models.generate_content(
         response_schema=_SHIRITORI_SCHEMA,
     ),
 )
-data = json.loads(resp.text)  # 必ずスキーマどおりのJSONが返る
+data = json.loads(resp.text)  # スキーマどおりのJSONが返る
 //}
 
-@<code>{response_mime_type="application/json"}と@<code>{response_schema}を組み合わせることで、モデルの出力を必ず指定したJSON形式に制約できます。
-正規表現によるパースが不要になり、出力が安定します。
-
-=== 画像生成：FlashとImagen
-
-Gemini APIで画像を生成する方法は2つあります。Flashは@<code>{response_modalities}に@<code>{["IMAGE", "TEXT"]}を指定します。レスポンスのpartsから@<code>{inline_data}を取り出して画像データを得ます。Imagenは@<code>{generate_images}メソッドを使う専用APIです。
-//emlist[gemini.py：Flashでの画像生成（抜粋）]{
-resp = client.models.generate_content(
-    model="gemini-2.0-flash-exp-image-generation",
-    contents="Draw a cute crayon illustration of: apple.",
-    config=types.GenerateContentConfig(
-        response_modalities=["IMAGE", "TEXT"]),
-)
-for part in resp.candidates[0].content.parts:
-    if part.inline_data is not None:
-        image_bytes = part.inline_data.data
-//}
-
-本アプリではFlashをデフォルトにしつつ、環境変数@<code>{IMAGE_MODEL}でImagenに切り替えられるようにしています。
-なお、画像生成プロンプトは英語の方が品質がよいため、日本語の単語をいったんGeminiで英訳してから渡しています。
+@<code>{response_mime_type="application/json"}と@<code>{response_schema}を組み合わせることで、モデルの出力を必ず指定したJSON形式に制約できます。これにより、安定した出力が得られます。
 
 == UIの仕上げ
 
 === custom_cssで不要な要素を隠す
 
 絵しりとりではテキスト入力を使わないため、Chainlit標準のメッセージ入力欄を非表示にします。
-//list[css][public/stylesheet.css][css]{
+//emlist[public/stylesheet.css][css]{
 /* テキスト入力欄を非表示にする */
 #message-composer {
-  display: none !important;
-}
-/* ウォーターマーク（免責文）を非表示 */
-.watermark {
-  display: none !important;
+  display: none;
 }
 //}
 @<code>{#message-composer}はChainlitソースコードのMessageComposer/index.tsxに由来するIDです。
@@ -325,21 +260,6 @@ custom_css = "/public/stylesheet.css"
 
 == まとめ
 
-=== CustomElementで広がる可能性
-
-今回はお絵かきキャンバスを実装しましたが、CustomElementの応用は絵しりとりに限りません。
-
- * @<b>{フォーム} ― チャット中に構造化データを入力させるカスタムフォーム
- * @<b>{データ可視化} ― グラフやチャートをインラインで表示（Canvas API / SVG）
- * @<b>{ミニゲーム} ― クイズ、パズル、インタラクティブなチュートリアル
- * @<b>{ファイル編集} ― コードエディタやマークダウンエディタの埋め込み
-
-@<code>{props}で受け取り、@<code>{callAction}で返す。
-このシンプルな双方向通信パターンさえ押さえれば、チャットUIの中に何でも埋め込むことが可能です。
-
-=== まとめ
-
-zosu!waiwai!
-
+本章では、ChainlitのCustomElementを活用して、チャット内にお絵かきキャンバスを埋め込み、AIと絵しりとりで遊べるWebアプリを作成しました。
 Chainlitは「チャットUI」の印象が強いフレームワークですが、CustomElementを活用すれば、チャットの枠を超えたリッチなインタラクションを実現できます。
-ぜひあなたも、自分だけのCustomElementを作ってみてください！
+ぜひあなたも、自分だけのアプリケーションを作ってみてください！
