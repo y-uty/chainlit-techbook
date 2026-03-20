@@ -2,15 +2,19 @@ PREDEF:
   - preface.re
 
 CHAPS:
-  - higuchi.re
-  - hojo.re
-  - ckato.re
-  - kotsubo.re
-  - nagamine.re
-  - satoshinakamura.re
-  - ditto.re
-  - uchiyama.re
-  - yanagi.re
+  - 導入編: 
+    - first_steps.re
+    - nagamine.re
+  - 機能編:
+    - satoshinakamura.re
+    - uchiyama.re
+    - kotsubo.re
+    - ckato.re
+  - 応用編:
+    - yanagi.re
+    - ditto.re
+    - hojo.re
+    - higuchi.re
 
 APPENDIX:
 
