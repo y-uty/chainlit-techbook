@@ -1,10 +1,15 @@
 = Chainlitをどう読むか
 
-本章では、Chainlitというライブラリをどのように理解するとよいか、すなわち「どう読むか」を整理していきます。
+//lead{
+本章では、Chainlitというライブラリをどのように理解するとよいかを整理します。
+単なるチャットUIではなく、対話型AIアプリを実装・観測・拡張していくためのライブラリとして捉えるために、その出発点と発展の流れをたどります。
 
-本章の役割は、後続の章を迷わず読み進めるための全体の見取り図を示すことにあります。
-実装ではなく概念の整理に比重を置いた章ですが、どうぞ気楽に目を通してみてください。
+Chainlitをこれから触ろうとしている方や、後続のハンズオンを読む前に全体の見取り図を掴んでおきたい方に向けた章です。
+実装そのものよりも概念の整理に比重を置いた章ですが、後続の章を読むための導入として気楽に目を通してみてください。
+//}
 
+
+//pagebreak
 == Chainlitについて整理する
 
 === Chainlitとはなにか
@@ -12,7 +17,7 @@
 #@# LLMと会話するアプリを作る方法は一つではなく、Gradio や Streamlit など複数の選択肢があることを軽く触れる。
 #@# そのうえで、ChainlitはPythonで対話型AIアプリを扱う題材として見通しがよく、本章ではその立ち位置を整理したい、と置く。
 
-では、改めてChainlitとはどのようなライブラリなのか、まずは簡単に見ていこうと思います。
+では、改めてChainlitとはどのようなライブラリなのでしょうか。
 Chainlitは、一言で言うならば対話型AIアプリをPythonで実装するためのライブラリです。
 公式ドキュメントでは "open-source Python package to build production ready Conversational AI" と説明されています。
 2026年3月現在、対話型AIアプリをPythonで作ろうとすると、間違いなく候補には上がるライブラリでしょう。
@@ -70,6 +75,7 @@ Chainlitは、対話型AIアプリを実装するにあたり必要となる様�
 //footnote[gradio_chatinterface][Gradio ChatInterface docs. “Gradio's high-level abstraction for creating chatbot UIs” および “create a web-based demo ... in a few lines of code” と説明されている。 https://www.gradio.app/docs/gradio/chatinterface]
 //footnote[streamlit_chat][Streamlit Chat elements docs. “help you build conversational apps” としつつ、chat message container の中に charts, tables, text, and more を含められると説明されている。 https://docs.streamlit.io/develop/api-reference/chat]
 
+//pagebreak
 == Chainlitはどこから来たのか
 
 === 「chatbot UI」としてはじまったChainlit
@@ -208,6 +214,7 @@ Chainlitは、対話型AIアプリを実装するにあたり必要となる様�
 対話型AIアプリを実装し、観測し、必要なら他の環境にも載せていくためのライブラリとして捉える方が、いま見えている姿にはよく合っています。
 //footnote[chainlit_migration_11300][Chainlit Migration Guide 1.1.300, https://docs.chainlit.io/guides/migration/1.1.300/]
 
+//pagebreak
 == LLMと会話する、LLMと遊ぶ
 #@# まとめと後続章へのブリッジ。  
 #@# ここまでの整理を踏まえると、後ろのハンズオンは単にチャット画面を作る話ではなく、対話型AIアプリの構成要素をどう組むかを見る話として読める、という形で接続する。  
