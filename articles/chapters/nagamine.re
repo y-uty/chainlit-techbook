@@ -1,6 +1,6 @@
 = Chainlitをどう読むか
 
-本章では、Chainlitというライブラリをどのように理解するとよいか、すなわち”どう読むか”を整理していきます。
+本章では、Chainlitというライブラリをどのように理解するとよいか、すなわち"どう読むか"を整理していきます。
 
 その役割は、後続の章を迷わず読み進めるための全体の見取り図を示すことにあります。
 実装ではなく概念の整理に比重を置いた章ですが、どうぞ気楽に目を通してみてください。
@@ -14,7 +14,7 @@
 
 では、改めてChainlitとはどのようなライブラリなのか、まずは簡単に見ていこうと思います。
 Chainlitは、一言で言うならば対話型AIアプリをPythonで実装するためのライブラリです。
-公式ドキュメントでは“open-source Python package to build production ready Conversational AI”と説明されています。
+公式ドキュメントでは"open-source Python package to build production ready Conversational AI"と説明されています。
 2026年3月現在、対話型AIアプリをPythonで作ろうとすると、間違いなく候補には上がるライブラリでしょう。
 
 もちろん、近い文脈で名前があがるライブラリもたくさんあります。
@@ -83,36 +83,36 @@ Chainlitに最初に触れるとき、多くの人は公式のドキュメント
 では、Chainlitは最初から現在のようなライブラリだったのでしょうか。
 この点を考えるうえでは、まず初期の自己定義を確認しておくのがよさそうです。
 
-少なくとも公開されている初期の説明を見る限り、Chainlitは当初 "A faster way to build chatbot UIs." とされていました@<fn>{chainlit011}。
-出発点として前面に出ていたのは、あくまで chatbot UI を素早く作るためのライブラリという位置づけです。
+公開されている最初期のドキュメントを見る限り、Chainlitは当初"A faster way to build chatbot UIs."とされていました@<fn>{chainlit011}。
+この出発点において前面に押し出されていたのは、あくまで「チャットUI開発のスピードアップ」という位置づけだったのです。
 
-//image[chainlit_0_1_1_tagline][Chainlit 0.1.1 における初期自己定義][scale=0.8]{
+//image[chainlit_0_1_1_tagline][Chainlit 0.1.1 における最初期の自己定義][scale=0.8]{
 //}
 
-この点は、現在の overview やデモを最初に見たときの印象ともつながっています。
-最初にそれらに触れた人にとって、ChainlitがまずチャットUIのライブラリに見えるのは偶然ではありません。
-少なくとも自己定義を見る限り、その第一印象は当初から大きく変わっていないようです。
+この出発点は、現在の overview やデモを最初に見たときの印象ともつながっています。
+最初にそれらに触れた人にとって、ChainlitがチャットUIのライブラリに見えるのは偶然ではありません。
+少なくとも最初期の自己定義を見る限り、そうした第一印象につながる要素は、プロジェクトの当初から含まれていたことがわかります。
 
-さらに、同じページにある Roadmap を見ても、当時の関心が強く UI とその周辺に寄っていたことがうかがえます。
-並んでいるのは、New UI elements、Custom UI elements、prompt playground まわりの拡張、app deployment といった項目です。
-少なくとも表向きには、「chatbot UI をどう育てるか」がかなり意識されていたように見えます。
+さらに、当時のロードマップを見ても、プロジェクトの関心がUIとその周辺領域に強く注がれていたことがわかります。
+そこには、New UI elements や Custom UI elements、prompt playground まわりの拡張、あるいは app deployment といった項目が並んでいました。
+少なくとも当時のロードマップを見る限り、まずは「AIチャットボットのUIをどう育てるか」という点に、関心が強く向いていたことがうかがえます。
 
 ただし、面白いのはここで話が終わらないことです。
-初期の Quickstart には、すでに intermediate step という表現（コメント）が確認できます。
+初期の Quickstart には、サンプルコード内のコメントとして、すでに intermediate step という語が確認できます。
 これは、最終的な応答だけを見せればよいというより、その途中で何が起きているのかも一緒に扱いたいという関心が、早い段階から現れていたことを示しているように見えます。
 
-//image[chainlit_0_1_1_intermediate_step][Chainlit 0.1.1 の Quickstart に見られる intermediate step][scale=0.8]{
+//image[chainlit_0_1_1_intermediate_step][Chainlit 0.1.1 の Quickstart に現れる intermediate step という語][scale=0.8]{
 //}
 
-もっとも、ここをそのまま現在の感覚で読むのは少し注意が要りそうです。
-いまでは CoT という発想も十分に整理されており、中間の step を明示することも比較的自然に見えます。
-実際、CoT という言葉自体は 2022 年にはすでに研究上で整理されていました@<fn>{cot2022}。
+もっとも、当時の意図をそのまま現在の感覚で読むのは少し注意が要りそうです。
+今でこそCoT（Chain-of-Thought）という考え方は広く浸透しており、中間のステップを明示することは、ごく自然な設計に思えます。
+実際、CoTという概念自体は、2022年に発表された論文ですでに体系化されていました@<fn>{cot2022}。
 
-ただ、2023年5月時点の Chainlit 0.1.1 を見る限り、前面に出ていた自己定義はまだ chatbot UI です。
-その意味では、初期の intermediate step を、現在のような reasoning 可視化の完成形としてそのまま読むのは少し早いかもしれません。
+しかし、2023年5月時点の Chainlit 0.1.1 を見る限り、前面に出ていた自己定義はまだ"chatbot UI"です。
+その意味では、初期の"intermediate step"を、現在のような推論プロセスの可視化としてそのまま解釈するのは少し気が早いかもしれません。
 むしろ、最終的な応答だけでは足りないという違和感が、すでに小さく現れていたものと考えるほうが自然でしょう。
 
-そう考えると、Chainlitの出発点はたしかに chatbot UI でしたが、その時点ですでに単なる見た目のUIには閉じない芽が含まれていた、と読むことができます。
+そう捉え直すと、Chainlitの出発点はたしかに chatbot UI でしたが、その時点ですでに、単なる見た目の制御には留まらない芽が含まれていた、と読むことができます。
 
 //footnote[chainlit011][PyPI: Chainlit 0.1.1, https://pypi.org/project/chainlit/0.1.1/]
 //footnote[cot2022][Wei et al., "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models", NeurIPS 2022.]
